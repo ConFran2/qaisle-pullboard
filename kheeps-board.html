@@ -291,6 +291,7 @@ nav{
   <button class="tab" id="tab-scheduler" onclick="switchView('scheduler')">Scheduler</button>
   <button class="tab" id="tab-production" onclick="switchView('production')">Production Schedule</button>
   <button class="tab active" id="tab-pullboard" onclick="switchView('pullboard')">Pull Board</button>
+  <button class="tab" id="tab-livesheet" onclick="switchView('livesheet')">Matt's Sheet (Live)</button>
   <div class="nav-clock" id="navclock"></div>
 </nav>
 
@@ -337,6 +338,17 @@ nav{
   </div>
   <div id="pb-week-info"></div>
   <div id="pb-days"></div>
+</div>
+
+<!-- LIVE GOOGLE SHEET VIEW -->
+<div class="view" id="view-livesheet">
+  <div class="view-hdr">
+    <h1>Matt's Sheet <span>(Live)</span></h1>
+    <button class="wk-nav" style="border:1px solid var(--line2);background:#fff;color:var(--ink);font-family:var(--sans);font-size:13px;font-weight:600;padding:8px 14px;border-radius:6px;cursor:pointer" onclick="fetchLiveSheet(true)">&#x21bb; Refresh now</button>
+  </div>
+  <div class="badge-note">Read directly from Matt's Google Sheet via QAisle's backend connection. Refreshes automatically every 60 seconds. This is a preview feed, separate from the Scheduler above &mdash; nothing here writes back to the Sheet.</div>
+  <div id="livesheet-status" style="font-size:12px;color:var(--faint);margin-bottom:14px;font-family:var(--mono)"></div>
+  <div id="livesheet-content"></div>
 </div>
 
 <!-- ITEM PICKER MODAL -->
@@ -574,6 +586,7 @@ function render(){
   if(state.view==='scheduler')renderScheduler();
   if(state.view==='production')renderProduction();
   if(state.view==='pullboard')renderPullBoard();
+  if(state.view==='livesheet')renderLiveSheet();
 }
 
 // =====================================================================
@@ -971,6 +984,87 @@ document.getElementById('modal-scrim').addEventListener('click',function(e){
 document.addEventListener('keydown',function(e){
   if(e.key==='Enter'&&document.getElementById('pin-input'))submitPin();
 });
+
+// =====================================================================
+// LIVE GOOGLE SHEET (Matt's Sheet, read-only preview)
+// =====================================================================
+state.liveSheetData=null;
+state.liveSheetError=null;
+state.liveSheetLastFetch=null;
+state.liveSheetTimer=null;
+
+function fetchLiveSheet(manual){
+  var statusEl=document.getElementById('livesheet-status');
+  if(statusEl) statusEl.textContent='Fetching latest from Matt\'s Sheet'+(manual?' (manual refresh)':'')+'...';
+  fetch('/.netlify/functions/get-schedule')
+    .then(function(r){
+      if(!r.ok) return r.json().then(function(j){throw new Error(j.detail||j.error||'Request failed');});
+      return r.json();
+    })
+    .then(function(data){
+      state.liveSheetData=data;
+      state.liveSheetError=null;
+      state.liveSheetLastFetch=new Date();
+      if(state.view==='livesheet') renderLiveSheet();
+    })
+    .catch(function(err){
+      state.liveSheetError=err.message;
+      state.liveSheetLastFetch=new Date();
+      if(state.view==='livesheet') renderLiveSheet();
+    });
+}
+
+function renderLiveSheet(){
+  var statusEl=document.getElementById('livesheet-status');
+  var contentEl=document.getElementById('livesheet-content');
+  if(!state.liveSheetData&&!state.liveSheetError){
+    statusEl.textContent='Loading...';
+    contentEl.innerHTML='';
+    fetchLiveSheet(false);
+    return;
+  }
+  var stamp=state.liveSheetLastFetch?state.liveSheetLastFetch.toLocaleTimeString():'--';
+  if(state.liveSheetError){
+    statusEl.innerHTML='<span style="color:var(--red)">Connection error</span> &middot; last attempt '+stamp;
+    contentEl.innerHTML='<div class="no-data">Could not reach Matt\'s Sheet.<br><b>'+state.liveSheetError+'</b><br>If this persists, confirm the Sheet is still shared with the service account.</div>';
+    return;
+  }
+  statusEl.textContent='Live as of '+stamp+' \u00b7 '+state.liveSheetData.count+' rows \u00b7 auto-refreshes every 60s';
+  var entries=state.liveSheetData.entries||[];
+  if(!entries.length){
+    contentEl.innerHTML='<div class="no-data">No rows found in the connected Sheet.</div>';
+    return;
+  }
+  // Group by date, then by room within date
+  var byDate={};
+  entries.forEach(function(e){
+    if(!byDate[e.date])byDate[e.date]=[];
+    byDate[e.date].push(e);
+  });
+  var html='';
+  Object.keys(byDate).forEach(function(date){
+    var rows=byDate[date];
+    var day=(rows[0]&&rows[0].day)?rows[0].day.toUpperCase():'';
+    html+='<div class="week-block"><div class="week-head"><div class="wlabel">'+date+' <span>'+day+'</span></div></div>';
+    html+='<div class="sched-grid"><div class="sg-head"></div><div class="sg-head">Room 1</div><div class="sg-head">Room 2</div><div class="sg-head">Room 3</div>';
+    html+='<div class="sg-daylabel"></div>';
+    [1,2,3].forEach(function(roomNum){
+      var match=rows.find(function(r){return r.room==='room '+roomNum;});
+      if(match&&match.item){
+        html+='<div class="sg-cell" style="cursor:default"><div class="cell-name">'+match.item+'</div><div class="cell-batch">'+(match.batches!=null?match.batches+' batches':'')+'</div></div>';
+      } else {
+        html+='<div class="sg-cell idle"><span class="idle-txt">-- idle --</span></div>';
+      }
+    });
+    html+='</div></div>';
+  });
+  contentEl.innerHTML=html;
+}
+
+// Auto-refresh every 60 seconds while the tab is open
+setInterval(function(){
+  if(state.view==='livesheet') fetchLiveSheet(false);
+},60000);
 
 // =====================================================================
 // INIT
