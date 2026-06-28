@@ -94,7 +94,10 @@ exports.handler = async function (event) {
           item: item ? item.trim() : null,
           batches: batches ? parseFloat(batches) : null,
           day: day ? day.trim().toLowerCase() : null,
-          room: room ? room.trim() : null,
+          // Normalize to lowercase so the Pull Board / Live tab match
+          // works even if "Room 1" gets typed with different casing
+          // or stray spaces (e.g. "Room 1", "ROOM 1 ", "room  1").
+          room: room ? room.trim().toLowerCase().replace(/\s+/g, ' ') : null,
           overrides: overrides, // [] when it's a plain full run
         };
       })
