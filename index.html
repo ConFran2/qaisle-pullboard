@@ -513,7 +513,7 @@ function cellHTML(wkIso,di,room){
   var namesHTML=validSlots.map(function(s,i){
     var it=ITEMS[s.itemId];
     var border=i>0?'border-top:1px dashed #ccc;margin-top:5px;padding-top:5px':'';
-    var runLabel=(!isFullRun(it,s))?'Partial':'';
+    var runLabel=(validSlots.length===1 && !isFullRun(it,s))?'Partial':'';
     var nameDiv='<div class="cell-name">'+it.name+'</div>';
     var batchDiv=runLabel?'<div class="cell-batch" style="color:var(--amber);font-weight:700">'+runLabel+'</div>':'';
     var warnHTML='';
@@ -892,16 +892,21 @@ function renderLiveSheet(){
     html+='<div class="sched-grid"><div class="sg-head"></div><div class="sg-head">Room 1</div><div class="sg-head">Room 2</div><div class="sg-head">Room 3</div>';
     html+='<div class="sg-daylabel"></div>';
     [1,2,3].forEach(function(roomNum){
-      var match=rows.find(function(r){return r.room==='room '+roomNum;});
-      if(match&&match.item){
-        var issues=validateRowOverrides(match);
-        var warnHTML='';
-        if(issues){
-          warnHTML='<div style="margin-top:6px;background:#fff0e6;border:1px solid var(--red);color:var(--red);font-size:11px;font-weight:700;padding:5px 8px;border-radius:5px;line-height:1.4">'+
-            '\u26A0 '+issues.join('<br>\u26A0 ')+'</div>';
-        }
-        var cellStyle=issues?' style="cursor:default;border-color:var(--red)"':' style="cursor:default"';
-        html+='<div class="sg-cell"'+cellStyle+'><div class="cell-name">'+match.item+'</div><div class="cell-batch">'+(match.batches!=null?match.batches+' batches':'')+'</div>'+warnHTML+'</div>';
+      var matches=rows.filter(function(r){return r.room==='room '+roomNum && r.item;});
+      if(matches.length){
+        var namesHTML=matches.map(function(match,i){
+          var issues=validateRowOverrides(match);
+          var warnHTML='';
+          if(issues){
+            warnHTML='<div style="margin-top:6px;background:#fff0e6;border:1px solid var(--red);color:var(--red);font-size:11px;font-weight:700;padding:5px 8px;border-radius:5px;line-height:1.4">'+
+              '\u26A0 '+issues.join('<br>\u26A0 ')+'</div>';
+          }
+          var border=i>0?'border-top:1px dashed #ccc;margin-top:5px;padding-top:5px':'';
+          return '<div style="'+border+'"><div class="cell-name">'+match.item+'</div><div class="cell-batch">'+(match.batches!=null?match.batches+' batches':'')+'</div>'+warnHTML+'</div>';
+        }).join('');
+        var anyIssues=matches.some(function(m){return validateRowOverrides(m);});
+        var cellStyle=anyIssues?' style="cursor:default;border-color:var(--red)"':' style="cursor:default"';
+        html+='<div class="sg-cell"'+cellStyle+'>'+namesHTML+'</div>';
       } else {
         html+='<div class="sg-cell idle"><span class="idle-txt">-- idle --</span></div>';
       }
