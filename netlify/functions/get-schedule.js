@@ -10,18 +10,19 @@
 
 const { google } = require('googleapis');
 
-// The exact column layout from Matt's real sheet / our test sheet:
-// A = Date, B = Micro Cleared, C = In NetSuite, D = Item, E = Lot Code,
-// F = Finished Cases, G = Batches, H = Day, I = Yield, J = Tray Pallets,
-// K = Unlabeled, L = ES, M = Sysco, N = Cafe, O = Room, P = Tray Receiving,
-// Q = Production Issues, R = Rework Used or Leftover
+// Column layout (0-indexed from A):
+// A=Date, B=Micro Cleared, C=In NetSuite, D=Item, E=Lot Code,
+// F=Finished Cases, G=Batches, H=Day, I=Yield, J=Tray Pallets,
+// K=Unlabeled, L=ES, M=Sysco, N=Cafe, O=Room,
+// P=Partial Item 1, Q=Weight 1, R=Partial Item 2, S=Weight 2,
+// T=Partial Item 3, U=Weight 3, V=Partial Item 4, W=Weight 4,
+// X=Tray Receiving, Y=Production Issues, Z=Rework Used or Leftover
 //
-// QAisle only needs: A (Date), D (Item), G (Batches), H (Day), O (Room)
+// QAisle reads: A (Date), D (Item), G (Batches), H (Day), O (Room),
+// plus the 4 Partial Item / Weight pairs (P-W).
 
 exports.handler = async function (event) {
   try {
-    // ---- 1. Read secrets from Netlify environment variables ----
-    // These get set once in the Netlify dashboard, never in this file.
     const SHEET_ID = process.env.QAISLE_SHEET_ID;
     const SERVICE_ACCOUNT_EMAIL = process.env.QAISLE_SERVICE_ACCOUNT_EMAIL;
     const PRIVATE_KEY = (process.env.QAISLE_PRIVATE_KEY || '').replace(/\\n/g, '\n');
@@ -37,7 +38,6 @@ exports.handler = async function (event) {
       };
     }
 
-    // ---- 2. Authenticate as the service account ----
     const auth = new google.auth.JWT(
       SERVICE_ACCOUNT_EMAIL,
       null,
@@ -47,10 +47,8 @@ exports.handler = async function (event) {
 
     const sheets = google.sheets({ version: 'v4', auth });
 
-    // ---- 3. Pull the raw rows from the sheet ----
-    // Adjust the tab name below ("Production Schedule") if Matt's tab
-    // is named differently. Range A:R covers every column we mirrored.
-    const range = "'Production Schedule'!A2:R1000";
+    // Range extended through column W to capture all 4 override pairs.
+    const range = "'Production Schedule'!A2:W1000";
 
     const response = await sheets.spreadsheets.values.get({
       spreadsheetId: SHEET_ID,
@@ -59,17 +57,37 @@ exports.handler = async function (event) {
 
     const rows = response.data.values || [];
 
-    // ---- 4. Map raw rows into the shape QAisle's pull board expects ----
     const scheduleEntries = rows
       .map((row) => {
-        const date = row[0];   // column A
-        const item = row[3];   // column D
-        const batches = row[6]; // column G
-        const day = row[7];    // column H
-        const room = row[14];  // column O
+        const date = row[0];    // A
+        const item = row[3];    // D
+        const batches = row[6]; // G
+        const day = row[7];     // H
+        const room = row[14];   // O
 
-        // Skip fully blank rows (no date at all)
         if (!date) return null;
+
+        // Build the 4 partial/override pairs. Columns:
+        // P(15)/Q(16), R(17)/S(18), T(19)/U(20), V(21)/W(22)
+        const partialPairs = [
+          { item: row[15], weight: row[16] },
+          { item: row[17], weight: row[18] },
+          { item: row[19], weight: row[20] },
+          { item: row[21], weight: row[22] },
+        ];
+
+        // Only keep pairs where the component name is actually filled in.
+        const overrides = partialPairs
+          .filter((p) => p.item && String(p.item).trim() !== '')
+          .map((p) => ({
+            component: String(p.item).trim(),
+            // Keep the raw weight as-is (string or empty) so the
+            // front end can distinguish "blank" from "0" reliably.
+            weight: p.weight === undefined || p.weight === null || String(p.weight).trim() === ''
+              ? null
+              : parseFloat(p.weight),
+            weightRaw: p.weight === undefined ? '' : String(p.weight),
+          }));
 
         return {
           date: date.trim(),
@@ -77,17 +95,15 @@ exports.handler = async function (event) {
           batches: batches ? parseFloat(batches) : null,
           day: day ? day.trim().toLowerCase() : null,
           room: room ? room.trim() : null,
+          overrides: overrides, // [] when it's a plain full run
         };
       })
       .filter(Boolean);
 
-    // ---- 5. Return clean JSON to the pull board ----
     return {
       statusCode: 200,
       headers: {
         'Content-Type': 'application/json',
-        // Cache for 30 seconds so the pull board isn't hammering the
-        // Sheets API on every single page load.
         'Cache-Control': 'public, max-age=30',
       },
       body: JSON.stringify({
