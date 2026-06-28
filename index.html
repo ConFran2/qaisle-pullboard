@@ -372,36 +372,73 @@ nav{
 var TUB_WT=30, PAL=36;
 var ITEMS = {
   // ---- Standard Meats (1-week pull lead) ----
-  chicken:      {name:'Chicken',       cat:'meat',pallet:1360,comp:[{n:'K&D',fw:4800,cw:50},{n:'B&B',fw:4800,cw:50}]},
-  roastbeef:    {name:'Roast Beef',    cat:'meat',pallet:1280,comp:[{n:'HRR',fw:4020,cw:60},{n:'Head Meat',fw:5280,cw:60}]},
-  beefpatty:    {name:'Beef Patty',    cat:'meat',pallet:1280,comp:[{n:'HRR',fw:4020,cw:60},{n:'Head Meat',fw:5280,cw:60}]},
-  pork:         {name:'Pork',          cat:'meat',pallet:1360,comp:[{n:'FTP Blend',fw:4560,cw:60}]},
-  sausage:      {name:'Sausage',       cat:'meat',pallet:1360,comp:[{n:'FTP Blend',fw:4560,cw:60}]},
-  turkey:       {name:'Turkey',        cat:'meat',pallet:1280,comp:[{n:'Ground Turkey',fw:9640,cw:40},{n:'Turkey Trim',fw:7480,cw:40}]},
-  fish:         {name:'Fish',          cat:'meat',pallet:1280,comp:[{n:'Pollock',fw:9065,cw:49}]},
-  bacon:        {name:'Bacon',         cat:'meat',pallet:1360,comp:[{n:'Cook Bacon',fw:500,cw:10},{n:'FTP Blend',fw:3960,cw:60}]},
+  // pulledByUs: true = generates a Pull Board row. false = Pete's component,
+  // but Matt can still log an override for it (componentOwner notes who pulls it).
+  chicken:      {name:'Chicken',       cat:'meat',pallet:1360,comp:[
+                  {n:'K&D',fw:4800,cw:50,pulledByUs:true},
+                  {n:'B&B',fw:4800,cw:50,pulledByUs:true},
+                  {n:'Thighs',fw:4800,cw:50,pulledByUs:true},
+                  {n:'Breast',fw:4800,cw:50,pulledByUs:true}]},
+  roastbeef:    {name:'Roast Beef',    cat:'meat',pallet:1280,comp:[
+                  {n:'HRR',fw:4020,cw:60,pulledByUs:true},
+                  {n:'Head Meat',fw:5280,cw:60,pulledByUs:true}]},
+  beefpatty:    {name:'Beef Patty',    cat:'meat',pallet:1280,comp:[
+                  {n:'HRR',fw:4020,cw:60,pulledByUs:true},
+                  {n:'Head Meat',fw:5280,cw:60,pulledByUs:true}]},
+  pork:         {name:'Pork',          cat:'meat',pallet:1360,comp:[
+                  {n:'FTP Blend',fw:4560,cw:60,pulledByUs:true},
+                  {n:'Sirloin',fw:2750,cw:60,pulledByUs:false},
+                  {n:'Shoulder',fw:1800,cw:60,pulledByUs:false}]},
+  sausage:      {name:'Sausage',       cat:'meat',pallet:1360,comp:[
+                  {n:'FTP Blend',fw:4560,cw:60,pulledByUs:true},
+                  {n:'Sirloin',fw:2750,cw:60,pulledByUs:false},
+                  {n:'Shoulder',fw:1800,cw:60,pulledByUs:false}]},
+  turkey:       {name:'Turkey',        cat:'meat',pallet:1280,comp:[
+                  {n:'Ground Turkey',fw:9640,cw:40,pulledByUs:true}]},
+  fish:         {name:'Fish',          cat:'meat',pallet:1280,comp:[
+                  {n:'Pollock',fw:9065,cw:49,pulledByUs:true}]},
+  bacon:        {name:'Bacon',         cat:'meat',pallet:1360,comp:[
+                  {n:'Cook Bacon',fw:500,cw:10,pulledByUs:true},
+                  {n:'FTP Blend',fw:3960,cw:60,pulledByUs:true},
+                  {n:'Sirloin',fw:2750,cw:60,pulledByUs:false},
+                  {n:'Shoulder',fw:1800,cw:60,pulledByUs:false}]},
   // ---- MM5 Meats (1-week pull lead) -- all weight-based ----
-  mm5chicken:   {name:'MM5 Chicken',   cat:'meat',pallet:1280,comp:[{n:"B&B",fw:3800,cw:50}]},
-  mm5roastbeef: {name:'MM5 Roast Beef',cat:'meat',pallet:1280,comp:[{n:"95's",fw:6000,cw:60},{n:'Head Meat',fw:3000,cw:60},{n:'HRR',fw:1500,cw:60}]},
-  mm5turkey:    {name:'MM5 Turkey',    cat:'meat',pallet:1280,comp:[{n:'Ground Turkey',fw:3000,cw:40},{n:'Turkey Trim',fw:7480,cw:40}]},
-  mm5pork:      {name:'MM5 Pork',      cat:'meat',pallet:1280,placeholder:true,comp:[]},
-  mm5bacon:     {name:'MM5 Bacon',     cat:'meat',pallet:1360,placeholder:true,comp:[]},
+  mm5chicken:   {name:'MM5 Chicken',   cat:'meat',pallet:1280,comp:[
+                  {n:'B&B',fw:3800,cw:50,pulledByUs:true}]},
+  mm5roastbeef: {name:'MM5 Roast Beef',cat:'meat',pallet:1280,comp:[
+                  {n:"95's",fw:6000,cw:60,pulledByUs:true},
+                  {n:'Head Meat',fw:3000,cw:60,pulledByUs:true},
+                  {n:'HRR',fw:1500,cw:60,pulledByUs:true}]},
+  mm5turkey:    {name:'MM5 Turkey',    cat:'meat',pallet:1280,comp:[
+                  {n:'Ground Turkey',fw:3000,cw:40,pulledByUs:true},
+                  {n:'Turkey Trim',fw:7480,cw:40,pulledByUs:true}]},
+  mm5pork:      {name:'MM5 Pork',      cat:'meat',pallet:0,placeholder:true,outOfScope:true,comp:[]},
+  mm5bacon:     {name:'MM5 Bacon',     cat:'meat',pallet:0,placeholder:true,outOfScope:true,comp:[]},
   // ---- Standard Tubs (2-week pull lead) -- tw=30 lbs per tub ----
-  carrots:      {name:'Carrots',       cat:'tub',pallet:0,   comp:[{n:'Carrots',fw:5400,tw:30}]},
-  greenbeans:   {name:'Green Beans',   cat:'tub',pallet:0,   comp:[{n:'Green Beans',fw:9450,tw:30}]},
-  broccoli:     {name:'Broccoli',      cat:'tub',pallet:0,   comp:[{n:'Broccoli',fw:9450,tw:30}]},
-  peas:         {name:'Peas',          cat:'tub',pallet:0,   comp:[{n:'Peas',fw:8100,tw:30}]},
-  corn:         {name:'Corn',          cat:'tub',pallet:0,   comp:[{n:'Corn',fw:9450,tw:30}]},
-  sweetpotato:  {name:'Sweet Potato',  cat:'tub',pallet:0,   comp:[{n:'Sweet Potato',fw:9450,tw:30}]},
-  pineapple:    {name:'Pineapple',     cat:'tub',pallet:0,   comp:[{n:'Pineapple',fw:6300,tw:30}]},
-  pear:         {name:'Pear',          cat:'tub',pallet:0,   comp:[{n:'Pear',fw:6300,tw:30}]},
-  peach:        {name:'Peach',         cat:'tub',pallet:0,   comp:[{n:'Peach',fw:6300,tw:30}]},
-  mixedberry:   {name:'Mixed Berry',   cat:'tub',pallet:0,   comp:[{n:'Mixed Berry',fw:6300,tw:30}]},
+  carrots:      {name:'Carrots',       cat:'tub',pallet:0,   comp:[{n:'Carrot Puree',fw:5400,tw:30,pulledByUs:true}]},
+  greenbeans:   {name:'Green Beans',   cat:'tub',pallet:0,   comp:[{n:'Green Bean Puree',fw:9450,tw:30,pulledByUs:true}]},
+  broccoli:     {name:'Broccoli',      cat:'tub',pallet:0,   comp:[{n:'Broccoli Puree',fw:9450,tw:30,pulledByUs:true}]},
+  peas:         {name:'Peas',          cat:'tub',pallet:0,   comp:[{n:'Pea Puree',fw:8100,tw:30,pulledByUs:true}]},
+  corn:         {name:'Corn',          cat:'tub',pallet:0,   comp:[{n:'Corn Puree',fw:9450,tw:30,pulledByUs:true}]},
+  pineapple:    {name:'Pineapple',     cat:'tub',pallet:0,   comp:[{n:'Pineapple Puree',fw:6300,tw:30,pulledByUs:true}]},
+  pear:         {name:'Pear',          cat:'tub',pallet:0,   comp:[{n:'Pear Puree',fw:6300,tw:30,pulledByUs:true}]},
+  peach:        {name:'Peach',         cat:'tub',pallet:0,   comp:[{n:'Peach Puree',fw:6300,tw:30,pulledByUs:true}]},
+  mixedberry:   {name:'Mixed Berry',   cat:'tub',pallet:0,   comp:[
+                  {n:'Pear Puree',fw:3000,tw:30,pulledByUs:true},
+                  {n:'Marion Puree',fw:1500,tw:30,pulledByUs:true},
+                  {n:'Strawberry Puree',fw:3000,tw:30,pulledByUs:true}]},
+  // sweetpotato removed: Restack does not pull this, components unknown
   // ---- MM5 Tubs (2-week pull lead) ----
-  mm5greenbeans:{name:'MM5 Green Beans',cat:'tub',pallet:1280,comp:[{n:'Green Beans Cases',fw:10500,cw:20}]},
-  mm5carrots:   {name:'MM5 Carrots',   cat:'tub',pallet:1050,comp:[{n:'Carrots Cases',fw:8000,cw:50},{n:'Carrot Puree',fw:3000,tw:30}]},
-  mm5broccoli:  {name:'MM5 Broccoli',  cat:'tub',pallet:1660,comp:[{n:'Brocc Cases',fw:11200,cw:20},{n:'Brocc Puree',fw:840,tw:30}]},
-  // ---- Other / Process TBD ----
+  mm5greenbeans:{name:'MM5 Green Beans',cat:'tub',pallet:1280,comp:[
+                  {n:"GB's (MM5)",fw:10500,cw:20,pulledByUs:true}]},
+  mm5carrots:   {name:'MM5 Carrots',   cat:'tub',pallet:1050,comp:[
+                  {n:'Carrot Bits',fw:8000,cw:50,pulledByUs:true},
+                  {n:'Carrot Puree',fw:3000,tw:30,pulledByUs:true}]},
+  mm5broccoli:  {name:'MM5 Broccoli',  cat:'tub',pallet:1660,comp:[
+                  {n:'Brocc Cuts',fw:11200,cw:20,pulledByUs:true},
+                  {n:'Broccoli Puree',fw:840,tw:30,pulledByUs:true}]},
+  // ---- Other / Process TBD / Out of scope ----
+  sweetpotato:  {name:'Sweet Potato',  cat:'other',pallet:0,placeholder:true,outOfScope:true,comp:[]},
   egg:          {name:'Egg',           cat:'other',pallet:0,placeholder:true,comp:[]},
   omelet:       {name:'Omelet',        cat:'other',pallet:0,placeholder:true,comp:[]},
   mm5egg:       {name:'MM5 Egg',       cat:'other',pallet:0,placeholder:true,comp:[]},
@@ -414,8 +451,8 @@ var ITEMS = {
   macncheese:   {name:'Mac N Cheese',  cat:'other',pallet:0,placeholder:true,comp:[]},
 };
 var MEAT_IDS  = ['chicken','roastbeef','beefpatty','pork','sausage','turkey','fish','bacon','mm5chicken','mm5roastbeef','mm5turkey','mm5pork','mm5bacon'];
-var TUB_IDS   = ['carrots','greenbeans','broccoli','peas','corn','sweetpotato','pineapple','pear','peach','mixedberry','mm5greenbeans','mm5carrots','mm5broccoli'];
-var OTHER_IDS = ['egg','omelet','mm5egg','pancake','waffle','frenchtoast','bread','bowtie','rice','macncheese'];
+var TUB_IDS   = ['carrots','greenbeans','broccoli','peas','corn','pineapple','pear','peach','mixedberry','mm5greenbeans','mm5carrots','mm5broccoli'];
+var OTHER_IDS = ['sweetpotato','egg','omelet','mm5egg','pancake','waffle','frenchtoast','bread','bowtie','rice','macncheese'];
 var DAYS = ['Monday','Tuesday','Wednesday','Thursday','Friday'];
 var MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 var PIN = '1234';
@@ -489,7 +526,7 @@ function seedIfEmpty(sched){
   ];
   var t=[
     ['carrots','greenbeans','broccoli'],
-    ['peas','corn','sweetpotato'],
+    ['peas','corn','pear'],
     ['pineapple','pear','peach'],
     ['mixedberry','carrots','greenbeans'],
     ['broccoli',null,'corn']
@@ -497,7 +534,7 @@ function seedIfEmpty(sched){
   var t2=[
     ['carrots','pineapple','greenbeans'],
     ['peas','pear','corn'],
-    ['broccoli','peach','sweetpotato'],
+    ['broccoli','peach','pineapple'],
     ['mixedberry','greenbeans','carrots'],
     ['corn',null,'pineapple']
   ];
@@ -993,6 +1030,30 @@ state.liveSheetError=null;
 state.liveSheetLastFetch=null;
 state.liveSheetTimer=null;
 
+// Returns null if the row has no problems, or an array of issue
+// descriptions if something in the Partial Item/Weight columns
+// doesn't match this item's known components or is incomplete.
+function validateRowOverrides(entry){
+  if(!entry.overrides || !entry.overrides.length) return null;
+  var itemKey=null;
+  Object.keys(ITEMS).forEach(function(k){
+    if(ITEMS[k].name.toLowerCase()===String(entry.item||'').toLowerCase()) itemKey=k;
+  });
+  var item=itemKey?ITEMS[itemKey]:null;
+  var validNames=item?item.comp.map(function(c){return c.n.toLowerCase();}):[];
+  var issues=[];
+  entry.overrides.forEach(function(ov){
+    if(ov.weight===null){
+      issues.push(ov.component+' has no weight entered');
+      return;
+    }
+    if(item&&validNames.indexOf(ov.component.toLowerCase())===-1){
+      issues.push('Not a standard item for this product');
+    }
+  });
+  return issues.length?issues:null;
+}
+
 function fetchLiveSheet(manual){
   var statusEl=document.getElementById('livesheet-status');
   if(statusEl) statusEl.textContent='Fetching latest from Matt\'s Sheet'+(manual?' (manual refresh)':'')+'...';
@@ -1051,7 +1112,14 @@ function renderLiveSheet(){
     [1,2,3].forEach(function(roomNum){
       var match=rows.find(function(r){return r.room==='room '+roomNum;});
       if(match&&match.item){
-        html+='<div class="sg-cell" style="cursor:default"><div class="cell-name">'+match.item+'</div><div class="cell-batch">'+(match.batches!=null?match.batches+' batches':'')+'</div></div>';
+        var issues=validateRowOverrides(match);
+        var warnHTML='';
+        if(issues){
+          warnHTML='<div style="margin-top:6px;background:#fff0e6;border:1px solid var(--red);color:var(--red);font-size:11px;font-weight:700;padding:5px 8px;border-radius:5px;line-height:1.4">'+
+            '\u26A0 '+issues.join('<br>\u26A0 ')+'</div>';
+        }
+        var cellStyle=issues?' style="cursor:default;border-color:var(--red)"':' style="cursor:default"';
+        html+='<div class="sg-cell"'+cellStyle+'><div class="cell-name">'+match.item+'</div><div class="cell-batch">'+(match.batches!=null?match.batches+' batches':'')+'</div>'+warnHTML+'</div>';
       } else {
         html+='<div class="sg-cell idle"><span class="idle-txt">-- idle --</span></div>';
       }
