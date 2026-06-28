@@ -785,6 +785,14 @@ function sheetEntryToSlot(entry){
 // shape that getCellSlots/renderProduction/renderPullBoard already know
 // how to read. Unrecognized items, dates, or rooms are skipped (not
 // fatal) so one bad row on the Sheet doesn't blank the whole board.
+//
+// IMPORTANT: more than one Sheet row can land on the same date+room
+// (e.g. Roast Beef and Beef Patty are split runs sharing one room/day,
+// confirmed a real weekly occurrence). These must accumulate into an
+// array of slots, not overwrite each other -- that's what lets the
+// existing merge/render logic (mergePulls, cellHTML) combine them into
+// one "Roast Beef / Beef Patty" display exactly like the old manual
+// Scheduler did for split runs.
 function sheetToSched(liveSheetData){
   var sched={};
   if(!liveSheetData || !liveSheetData.entries) return sched;
@@ -802,7 +810,14 @@ function sheetToSched(liveSheetData){
     if(room<1||room>3) return;
     var slot=sheetEntryToSlot(entry);
     if(!slot) return;
-    setCell(sched,wkIso,di,room,slot);
+    var existing=getCell(sched,wkIso,di,room);
+    if(!existing){
+      setCell(sched,wkIso,di,room,slot);
+    } else if(Array.isArray(existing)){
+      existing.push(slot);
+    } else {
+      setCell(sched,wkIso,di,room,[existing,slot]);
+    }
   });
   return sched;
 }
