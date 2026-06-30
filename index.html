@@ -417,6 +417,9 @@ function computeComp(c,lbs){
 // Is this cell a full run? (all comp weights match fw)
 function isFullRun(item,cell){
   if(!cell||!cell.comps||!cell.comps.length)return true;
+  if(cell.mergedFullCheck){
+    return cell.comps.every(function(c){return c.lbs===c.fullRunLbs;});
+  }
   return item.comp.every(function(c,i){
     return cell.comps[i]&&cell.comps[i].lbs===c.fw;
   });
@@ -545,7 +548,14 @@ function renderProduction(){
   document.getElementById('prod-grid').innerHTML=html;
 }
 
-// Roast Beef + Beef Patty in the same room share one pull using RB's weights
+// Roast Beef + Beef Patty in the same room share one physical pull.
+// Matt enters his own weight on each row (often a ratio calculation,
+// not a clean 50/50 split, and sometimes one row is left blank/zeroed
+// while the other carries the full weight) -- so the board must always
+// SUM the entered weights component-by-component across every row
+// sharing the pull, never just display one row's numbers. Issues from
+// either row are combined too, so a flag on Beef Patty's row doesn't
+// get silently dropped just because Roast Beef's row is clean.
 function mergePulls(pulls){
   var rbByRoom={}, bpByRoom={};
   pulls.forEach(function(p,i){
@@ -555,8 +565,38 @@ function mergePulls(pulls){
   var skipIdx={};
   Object.keys(bpByRoom).forEach(function(room){
     if(rbByRoom[room]!==undefined){
-      pulls[rbByRoom[room]].pairedName='Roast Beef / Beef Patty';
-      skipIdx[bpByRoom[room]]=true;
+      var rbIdx=rbByRoom[room], bpIdx=bpByRoom[room];
+      var rbCell=pulls[rbIdx].cell, bpCell=pulls[bpIdx].cell;
+      var rbItem=ITEMS[rbCell.itemId], bpItem=ITEMS[bpCell.itemId];
+      // Sum lbs per component position. Both items share the same
+      // component list (HRR, Head Meat) by recipe design, so positional
+      // pairing is safe here.
+      // Operating rule (confirmed): when Roast Beef and Beef Patty split a
+      // pull, Matt enters an explicit override on BOTH rows -- no blank
+      // rows standing in for "the other half." So this sums whatever each
+      // row's comps say. The one exception: if NEITHER row has any
+      // override at all, both default to the same single-item full-run
+      // weight, and summing those would double-count a normal shared pull
+      // that simply isn't a partial day -- so that specific case uses one
+      // full run, not two.
+      var mergedComps=rbItem.comp.map(function(c,i){
+        var rbLbs=(rbCell.comps&&rbCell.comps[i])?rbCell.comps[i].lbs:c.fw;
+        var bpLbs=(bpCell.comps&&bpCell.comps[i])?bpCell.comps[i].lbs:c.fw;
+        if(!rbCell.hasOverrides && !bpCell.hasOverrides){
+          return {lbs:c.fw, fullRunLbs:c.fw};
+        }
+        return {lbs:rbLbs+bpLbs, fullRunLbs:c.fw};
+      });
+      var mergedIssues=[].concat(rbCell.issues||[],bpCell.issues||[]);
+      pulls[rbIdx]=Object.assign({},pulls[rbIdx],{
+        pairedName:'Roast Beef / Beef Patty',
+        cell:Object.assign({},rbCell,{
+          comps:mergedComps,
+          issues:mergedIssues.length?mergedIssues:null,
+          mergedFullCheck:true, // tells isFullRun to use fullRunLbs instead of c.fw
+        }),
+      });
+      skipIdx[bpIdx]=true;
     }
   });
   return pulls.filter(function(p,i){return !skipIdx[i];});
@@ -778,6 +818,11 @@ function sheetEntryToSlot(entry){
     itemId:itemKey,
     comps:comps,
     issues:validateRowOverrides(entry),
+    // True only if this row had at least one override column filled in.
+    // Matters for merge math: a blank row sharing a pull with an
+    // overridden row means "this row isn't where the number lives,"
+    // not "pull another full standalone run."
+    hasOverrides:!!(entry.overrides && entry.overrides.length),
   };
 }
 
