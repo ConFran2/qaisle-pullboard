@@ -432,6 +432,17 @@ function tubBreakdown(tubs){
 
 // Returns flat comp rows for pull board
 function getCellCompRows(item,cell){
+  if(cell.mergedFullCheck){
+    // Merged cell: each comps entry already carries its own name/unit
+    // info (built by buildMergedComps as a name-based union across the
+    // merged items, which may not match any single item's own recipe
+    // order or length).
+    return cell.comps.map(function(c){
+      var r=computeComp(c,c.lbs);
+      if(r.type==='tub')return{name:c.n,qty:r.display,wt:r.breakdown};
+      return{name:c.n,qty:r.display,wt:c.lbs.toLocaleString()+' lbs'};
+    });
+  }
   return item.comp.map(function(c,i){
     var lbs=(cell.comps&&cell.comps[i])?cell.comps[i].lbs:c.fw;
     var r=computeComp(c,lbs);
@@ -552,52 +563,86 @@ function renderProduction(){
 // Matt enters his own weight on each row (often a ratio calculation,
 // not a clean 50/50 split, and sometimes one row is left blank/zeroed
 // while the other carries the full weight) -- so the board must always
-// SUM the entered weights component-by-component across every row
-// sharing the pull, never just display one row's numbers. Issues from
-// either row are combined too, so a flag on Beef Patty's row doesn't
-// get silently dropped just because Roast Beef's row is clean.
-function mergePulls(pulls){
-  var rbByRoom={}, bpByRoom={};
-  pulls.forEach(function(p,i){
-    if(p.cell.itemId==='roastbeef') rbByRoom[p.room]=i;
-    if(p.cell.itemId==='beefpatty') bpByRoom[p.room]=i;
+// Groups of items that can share one physical pull when scheduled
+// together in the same room/day. Order within a group matters: the
+// first-listed item's numbers are used as the reference "full run"
+// for any component name shared across the group, and as the display
+// name order (e.g. "Roast Beef / Beef Patty", not the reverse).
+//
+// Egg/Omelet and Pork/MM5 Pork are deliberately NOT included: MM5 Pork
+// and Egg/Omelet currently have no recipe (placeholder, comp:[]), so
+// they never generate a pull row to begin with and can't be merged
+// until those recipes are built out.
+var MERGE_GROUPS=[
+  ['roastbeef','beefpatty','mm5roastbeef'],
+  ['chicken','mm5chicken'],
+  ['turkey','mm5turkey'],
+  ['greenbeans','mm5greenbeans'],
+  ['carrots','mm5carrots'],
+  ['broccoli','mm5broccoli'],
+];
+
+// Builds a merged component list across 2+ items sharing a pull, by
+// component NAME rather than array position -- required because some
+// pairs only partially overlap (Chicken's K&D/B&B vs MM5 Chicken's
+// B&B/Thighs/Breast share only B&B). Component names that appear in
+// more than one of the merged items' recipes get summed (when at
+// least one row has real overrides entered); names unique to one item
+// just pass through that item's own number untouched.
+function buildMergedComps(itemKeys,cells){
+  var anyOverride=cells.some(function(c){return c.hasOverrides;});
+  var seen={}, result=[];
+  itemKeys.forEach(function(key,gi){
+    var item=ITEMS[key], cell=cells[gi];
+    item.comp.forEach(function(c,ci){
+      var nameKey=c.n.toLowerCase();
+      var lbs=(cell.comps&&cell.comps[ci])?cell.comps[ci].lbs:c.fw;
+      if(seen[nameKey]===undefined){
+        seen[nameKey]=result.length;
+        result.push({n:c.n,cw:c.cw,tw:c.tw,fullRunLbs:c.fw,lbs:lbs});
+      } else if(anyOverride){
+        // Shared name, and at least one row has real numbers entered:
+        // sum the contributions.
+        result[seen[nameKey]].lbs+=lbs;
+      }
+      // Shared name but nobody in the group has overrides: leave the
+      // first contributor's value as-is, don't add a second default
+      // full-run number on top of it (would double-count a normal day).
+    });
   });
+  return result;
+}
+
+function mergePulls(pulls){
+  var byRoom={};
+  pulls.forEach(function(p,i){(byRoom[p.room]=byRoom[p.room]||[]).push(i);});
   var skipIdx={};
-  Object.keys(bpByRoom).forEach(function(room){
-    if(rbByRoom[room]!==undefined){
-      var rbIdx=rbByRoom[room], bpIdx=bpByRoom[room];
-      var rbCell=pulls[rbIdx].cell, bpCell=pulls[bpIdx].cell;
-      var rbItem=ITEMS[rbCell.itemId], bpItem=ITEMS[bpCell.itemId];
-      // Sum lbs per component position. Both items share the same
-      // component list (HRR, Head Meat) by recipe design, so positional
-      // pairing is safe here.
-      // Operating rule (confirmed): when Roast Beef and Beef Patty split a
-      // pull, Matt enters an explicit override on BOTH rows -- no blank
-      // rows standing in for "the other half." So this sums whatever each
-      // row's comps say. The one exception: if NEITHER row has any
-      // override at all, both default to the same single-item full-run
-      // weight, and summing those would double-count a normal shared pull
-      // that simply isn't a partial day -- so that specific case uses one
-      // full run, not two.
-      var mergedComps=rbItem.comp.map(function(c,i){
-        var rbLbs=(rbCell.comps&&rbCell.comps[i])?rbCell.comps[i].lbs:c.fw;
-        var bpLbs=(bpCell.comps&&bpCell.comps[i])?bpCell.comps[i].lbs:c.fw;
-        if(!rbCell.hasOverrides && !bpCell.hasOverrides){
-          return {lbs:c.fw, fullRunLbs:c.fw};
-        }
-        return {lbs:rbLbs+bpLbs, fullRunLbs:c.fw};
+  Object.keys(byRoom).forEach(function(room){
+    var idxs=byRoom[room];
+    MERGE_GROUPS.forEach(function(group){
+      var matched=idxs.filter(function(i){
+        return !skipIdx[i] && group.indexOf(pulls[i].cell.itemId)!==-1;
       });
-      var mergedIssues=[].concat(rbCell.issues||[],bpCell.issues||[]);
-      pulls[rbIdx]=Object.assign({},pulls[rbIdx],{
-        pairedName:'Roast Beef / Beef Patty',
-        cell:Object.assign({},rbCell,{
+      if(matched.length<2) return; // need 2+ present in this room to merge
+      matched.sort(function(a,b){
+        return group.indexOf(pulls[a].cell.itemId)-group.indexOf(pulls[b].cell.itemId);
+      });
+      var primaryIdx=matched[0];
+      var itemKeys=matched.map(function(i){return pulls[i].cell.itemId;});
+      var cells=matched.map(function(i){return pulls[i].cell;});
+      var names=itemKeys.map(function(k){return ITEMS[k].name;});
+      var mergedComps=buildMergedComps(itemKeys,cells);
+      var mergedIssues=[].concat.apply([],cells.map(function(c){return c.issues||[];}));
+      pulls[primaryIdx]=Object.assign({},pulls[primaryIdx],{
+        pairedName:names.join(' / '),
+        cell:Object.assign({},pulls[primaryIdx].cell,{
           comps:mergedComps,
           issues:mergedIssues.length?mergedIssues:null,
-          mergedFullCheck:true, // tells isFullRun to use fullRunLbs instead of c.fw
+          mergedFullCheck:true,
         }),
       });
-      skipIdx[bpIdx]=true;
-    }
+      matched.slice(1).forEach(function(i){skipIdx[i]=true;});
+    });
   });
   return pulls.filter(function(p,i){return !skipIdx[i];});
 }
