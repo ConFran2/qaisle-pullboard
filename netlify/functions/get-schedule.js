@@ -94,10 +94,15 @@ exports.handler = async function (event) {
           item: item ? item.trim() : null,
           batches: batches ? parseFloat(batches) : null,
           day: day ? day.trim().toLowerCase() : null,
-          // Normalize to lowercase so the Pull Board / Live tab match
-          // works even if "Room 1" gets typed with different casing
-          // or stray spaces (e.g. "Room 1", "ROOM 1 ", "room  1").
-          room: room ? room.trim().toLowerCase().replace(/\s+/g, ' ') : null,
+          // Normalize to a canonical "room N" string by extracting just
+          // the digit, so any typed variation (room1, Room 1, ROOM  1,
+          // room1 with no space) all match identically downstream. This
+          // matters because the front end does an exact string match.
+          room: (function(){
+            if(!room) return null;
+            var m = String(room).match(/(\d+)/);
+            return m ? 'room ' + m[1] : null;
+          })(),
           overrides: overrides, // [] when it's a plain full run
         };
       })
