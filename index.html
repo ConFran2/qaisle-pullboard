@@ -412,10 +412,9 @@ function computeComp(c,lbs){
   }
   if(c.cw===undefined){
     // Case weight not known yet (e.g. a component only Pete pulls, whose
-    // per-case weight hasn't been confirmed). Show the honest weight
-    // only -- a guessed case count would look authoritative but be a
-    // fabrication, which is worse than admitting we don't know yet.
-    return{type:'cs-unknown',qty:null,display:'-- (case wt unknown)',lbs:lbs};
+    // per-case weight hasn't been confirmed). Leave qty blank rather
+    // than fabricate a case count.
+    return{type:'cs-unknown',qty:null,display:'',lbs:lbs};
   }
   var cases=Math.ceil(lbs/c.cw);
   return{type:'cs',qty:cases,display:cases+' cs',lbs:lbs};
