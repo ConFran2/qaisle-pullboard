@@ -288,8 +288,9 @@ var ITEMS = {
                   {n:'Pollock',fw:9065,cw:49,pulledByUs:true}]},
   bacon:        {name:'Bacon',         cat:'meat',pallet:1360,comp:[
                   {n:'Cook Bacon',fw:500,cw:10,pulledByUs:true},
-                  {n:'FTP Blend',fw:3960,cw:60,pulledByUs:true},
-                  {n:'Sirloin',fw:2750,cw:60,pulledByUs:false},
+                  {n:'FTP Blend',fw:4000,cw:60,pulledByUs:true},
+                  {n:'Bacon Ends',fw:4000,pulledByUs:false}, // cw TBD -- pending Pete/Matt confirmation, shows lbs only until then
+                  {n:'Sirloin',fw:1200,cw:60,pulledByUs:false},
                   {n:'Shoulder',fw:1800,cw:60,pulledByUs:false}]},
   // ---- MM5 Meats (1-week pull lead) -- all weight-based ----
   mm5chicken:   {name:'MM5 Chicken',   cat:'meat',pallet:1280,comp:[
@@ -409,6 +410,13 @@ function computeComp(c,lbs){
   if(c.tw!==undefined){
     var tubs=Math.ceil(lbs/c.tw);
     return{type:'tub',qty:tubs,display:tubs+' tubs',breakdown:tubBreakdown(tubs)};
+  }
+  if(c.cw===undefined){
+    // Case weight not known yet (e.g. a component only Pete pulls, whose
+    // per-case weight hasn't been confirmed). Show the honest weight
+    // only -- a guessed case count would look authoritative but be a
+    // fabrication, which is worse than admitting we don't know yet.
+    return{type:'cs-unknown',qty:null,display:'-- (case wt unknown)',lbs:lbs};
   }
   var cases=Math.ceil(lbs/c.cw);
   return{type:'cs',qty:cases,display:cases+' cs',lbs:lbs};
