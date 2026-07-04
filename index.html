@@ -1018,9 +1018,15 @@ function renderLiveSheet(){
   contentEl.innerHTML=html;
 }
 
-// Auto-refresh every 60 seconds while the tab is open
+// Auto-refresh every 60 seconds, regardless of which tab is open. This
+// keeps Production Schedule, Pull Board, and Matt's Live Sheet all in
+// sync automatically -- important since these are meant to run
+// unattended on a TV for the floor crew to see, not require someone to
+// manually visit the Live Sheet tab to trigger an update for everyone.
+// fetchLiveSheet's own success handler already re-renders whichever
+// tab is currently active, so no other changes are needed here.
 setInterval(function(){
-  if(state.view==='livesheet') fetchLiveSheet(false);
+  fetchLiveSheet(false);
 },60000);
 
 // =====================================================================
