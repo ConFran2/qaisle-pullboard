@@ -534,15 +534,14 @@ function cellHTML(wkIso,di,room){
   var namesHTML=validSlots.map(function(s,i){
     var it=ITEMS[s.itemId];
     var border=i>0?'border-top:1px dashed #ccc;margin-top:5px;padding-top:5px':'';
-    var runLabel=(validSlots.length===1 && !isFullRun(it,s))?'Partial':'';
-    var nameDiv='<div class="cell-name">'+it.name+'</div>';
-    var batchDiv=runLabel?'<div class="cell-batch" style="color:var(--amber);font-weight:700">'+runLabel+'</div>':'';
+    var batchHTML=(s.batches!=null)?'<span style="color:var(--red)">Batch '+s.batches+'</span>':'';
+    var nameDiv='<div class="cell-name" style="display:flex;align-items:baseline;justify-content:space-between"><span>'+it.name+'</span>'+batchHTML+'</div>';
     var warnHTML='';
     if(s.issues&&s.issues.length){
       warnHTML='<div style="margin-top:6px;background:#fff0e6;border:1px solid var(--red);color:var(--red);font-size:11px;font-weight:700;padding:5px 8px;border-radius:5px;line-height:1.4">'+
         '\u26A0 '+s.issues.join('<br>\u26A0 ')+'</div>';
     }
-    return '<div style="'+border+'">'+nameDiv+batchDiv+warnHTML+'</div>';
+    return '<div style="'+border+'">'+nameDiv+warnHTML+'</div>';
   }).join('');
   return '<div class="sg-cell '+cls+'"'+cellStyle+'>'+namesHTML+'</div>';
 }
@@ -881,6 +880,7 @@ function sheetEntryToSlot(entry){
     // overridden row means "this row isn't where the number lives,"
     // not "pull another full standalone run."
     hasOverrides:!!(entry.overrides && entry.overrides.length),
+    batches:entry.batches!=null?entry.batches:null,
   };
 }
 
