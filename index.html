@@ -805,10 +805,7 @@ function fmtTime(d){
 // doesn't match this item's known components or is incomplete.
 function validateRowOverrides(entry){
   if(!entry.overrides || !entry.overrides.length) return null;
-  var itemKey=null;
-  Object.keys(ITEMS).forEach(function(k){
-    if(ITEMS[k].name.toLowerCase()===String(entry.item||'').toLowerCase()) itemKey=k;
-  });
+  var itemKey=findItemKeyByName(entry.item);
   var item=itemKey?ITEMS[itemKey]:null;
   var validNames=item?item.comp.map(function(c){return c.n.toLowerCase();}):[];
   var issues=[];
@@ -839,9 +836,17 @@ function parseSheetDate(str){
 
 // Looks up an ITEMS key by display name (case-insensitive).
 function findItemKeyByName(name){
+  // Collapse repeated/stray whitespace before comparing, so something
+  // like "MM5  Turkey" (extra space) still matches "MM5 Turkey" -- a
+  // typo like this previously made an item vanish from Production
+  // Schedule/Pull Board (which need this exact match) while still
+  // showing fine on Matt's Live Sheet (which just displays raw text
+  // and never needs to match it against the recipe table).
+  var normalized=String(name||'').trim().toLowerCase().replace(/\s+/g,' ');
   var key=null;
   Object.keys(ITEMS).forEach(function(k){
-    if(ITEMS[k].name.toLowerCase()===String(name||'').toLowerCase()) key=k;
+    var itemNormalized=ITEMS[k].name.trim().toLowerCase().replace(/\s+/g,' ');
+    if(itemNormalized===normalized) key=k;
   });
   return key;
 }
