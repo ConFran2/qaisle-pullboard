@@ -83,16 +83,19 @@ exports.handler = async function (event) {
             component: String(p.item).trim(),
             // Keep the raw weight as-is (string or empty) so the
             // front end can distinguish "blank" from "0" reliably.
+            // Strip commas first -- parseFloat("2,500") silently
+            // returns 2, not 2500, which would be a dangerous silent
+            // wrong number with no error anywhere in the pipeline.
             weight: p.weight === undefined || p.weight === null || String(p.weight).trim() === ''
               ? null
-              : parseFloat(p.weight),
+              : parseFloat(String(p.weight).replace(/,/g, '')),
             weightRaw: p.weight === undefined ? '' : String(p.weight),
           }));
 
         return {
           date: date.trim(),
           item: item ? item.trim() : null,
-          batches: batches ? parseFloat(batches) : null,
+          batches: batches ? parseFloat(String(batches).replace(/,/g, '')) : null,
           day: day ? day.trim().toLowerCase() : null,
           // Normalize to a canonical "room N" string by extracting just
           // the digit, so any typed variation (room1, Room 1, ROOM  1,
