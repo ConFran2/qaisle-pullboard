@@ -307,23 +307,23 @@ var ITEMS = {
                   {n:'Sirloin',fw:10500,cw:60,pulledByUs:false}]},
   mm5bacon:     {name:'MM5 Bacon',     cat:'meat',pallet:0,placeholder:true,outOfScope:true,comp:[]},
   // ---- Standard Tubs (2-week pull lead) -- tw=30 lbs per tub ----
-  carrots:      {name:'Carrots',       cat:'tub',pallet:0,   comp:[{n:'Carrot Puree',fw:5400,tw:30,pulledByUs:true}]},
-  greenbeans:   {name:'Green Beans',   cat:'tub',pallet:0,   comp:[{n:'Green Bean Puree',fw:9450,tw:30,pulledByUs:true}]},
+  carrots:      {name:'Carrots',       aliases:['Carrot'],      cat:'tub',pallet:0,   comp:[{n:'Carrot Puree',fw:5400,tw:30,pulledByUs:true}]},
+  greenbeans:   {name:'Green Beans',   aliases:['Green Bean'],  cat:'tub',pallet:0,   comp:[{n:'Green Bean Puree',fw:9450,tw:30,pulledByUs:true}]},
   broccoli:     {name:'Broccoli',      cat:'tub',pallet:0,   comp:[{n:'Broccoli Puree',fw:9450,tw:30,pulledByUs:true}]},
-  peas:         {name:'Peas',          cat:'tub',pallet:0,   comp:[{n:'Pea Puree',fw:8100,tw:30,pulledByUs:true}]},
+  peas:         {name:'Peas',          aliases:['Pea'],         cat:'tub',pallet:0,   comp:[{n:'Pea Puree',fw:8100,tw:30,pulledByUs:true}]},
   corn:         {name:'Corn',          cat:'tub',pallet:0,   comp:[{n:'Corn Puree',fw:9450,tw:30,pulledByUs:true}]},
   pineapple:    {name:'Pineapple',     cat:'tub',pallet:0,   comp:[{n:'Pineapple Puree',fw:6300,tw:30,pulledByUs:true}]},
   pear:         {name:'Pear',          cat:'tub',pallet:0,   comp:[{n:'Pear Puree',fw:6300,tw:30,pulledByUs:true}]},
   peach:        {name:'Peach',         cat:'tub',pallet:0,   comp:[{n:'Peach Puree',fw:6300,tw:30,pulledByUs:true}]},
   mixedberry:   {name:'Mixed Berry',   cat:'tub',pallet:0,   comp:[
-                  {n:'Pear Puree',fw:3000,tw:30,pulledByUs:true},
-                  {n:'Marion Puree',fw:1500,tw:30,pulledByUs:true},
-                  {n:'Strawberry Puree',fw:3000,tw:30,pulledByUs:true}]},
+                  {n:'Pear Puree',fw:2250,tw:30,pulledByUs:true},
+                  {n:'Marion Puree',fw:1200,tw:30,pulledByUs:true},
+                  {n:'Strawberry Puree',fw:2250,tw:30,pulledByUs:true}]},
   // sweetpotato removed: Restack does not pull this, components unknown
   // ---- MM5 Tubs (2-week pull lead) ----
-  mm5greenbeans:{name:'MM5 Green Beans',cat:'tub',pallet:1280,comp:[
+  mm5greenbeans:{name:'MM5 Green Beans',aliases:['MM5 Green Bean'],cat:'tub',pallet:1280,comp:[
                   {n:"GB's (MM5)",fw:10500,cw:20,pulledByUs:true}]},
-  mm5carrots:   {name:'MM5 Carrots',   cat:'tub',pallet:1050,comp:[
+  mm5carrots:   {name:'MM5 Carrots',   aliases:['MM5 Carrot'], cat:'tub',pallet:1050,comp:[
                   {n:'Carrot Bits (MM5)',fw:8000,cw:50,pulledByUs:true},
                   {n:'Carrot Puree',fw:3000,tw:30,pulledByUs:true}]},
   mm5broccoli:  {name:'MM5 Broccoli',  cat:'tub',pallet:1660,comp:[
@@ -341,16 +341,17 @@ var ITEMS = {
   mm5blueberrymuffin: {name:'MM5 Blueberry Muffin',  cat:'other',pallet:0,placeholder:true,comp:[]},
   strawberryshortcake:{name:'Strawberry Shortcake',  cat:'other',pallet:0,placeholder:true,comp:[]},
   bread:        {name:'Bread',         cat:'other',pallet:0,placeholder:true,comp:[]},
-  bowtie:       {name:'Bowtie Pasta',  cat:'other',pallet:0,placeholder:true,comp:[]},
+  bowtie:       {name:'Bowtie Pasta',  aliases:['Bowtie'],      cat:'other',pallet:0,placeholder:true,comp:[]},
   rice:         {name:'Rice',          cat:'other',pallet:0,placeholder:true,comp:[]},
   macncheese:   {name:'Mac N Cheese',  cat:'other',pallet:0,placeholder:true,comp:[]},
   cornflakes:   {name:'Corn Flakes',   cat:'other',pallet:0,placeholder:true,comp:[]},
   raisinbran:   {name:'Raisin Bran',   cat:'other',pallet:0,placeholder:true,comp:[]},
   croquettes:   {name:'Croquettes',    cat:'other',pallet:0,placeholder:true,comp:[]},
+  cooksemoline: {name:'Cook Semoline', cat:'other',pallet:0,placeholder:true,comp:[]},
 };
 var MEAT_IDS  = ['chicken','roastbeef','beefpatty','pork','sausage','turkey','fish','bacon','mm5chicken','mm5roastbeef','mm5turkey','mm5pork','mm5bacon'];
 var TUB_IDS   = ['carrots','greenbeans','broccoli','peas','corn','pineapple','pear','peach','mixedberry','mm5greenbeans','mm5carrots','mm5broccoli'];
-var OTHER_IDS = ['sweetpotato','egg','omelet','mm5egg','pancake','waffle','frenchtoast','mm5applefrenchtoast','mm5blueberrymuffin','strawberryshortcake','bread','bowtie','rice','macncheese','cornflakes','raisinbran','croquettes'];
+var OTHER_IDS = ['sweetpotato','egg','omelet','mm5egg','pancake','waffle','frenchtoast','mm5applefrenchtoast','mm5blueberrymuffin','strawberryshortcake','bread','bowtie','rice','macncheese','cornflakes','raisinbran','croquettes','cooksemoline'];
 var DAYS = ['Monday','Tuesday','Wednesday','Thursday','Friday'];
 var MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 
@@ -865,7 +866,14 @@ function findItemKeyByName(name){
   var key=null;
   Object.keys(ITEMS).forEach(function(k){
     var itemNormalized=ITEMS[k].name.trim().toLowerCase().replace(/\s+/g,' ');
-    if(itemNormalized===normalized) key=k;
+    if(itemNormalized===normalized){ key=k; return; }
+    // Also check any recognized alternate names (e.g. "Carrot" for
+    // "Carrots", "Bowtie" for "Bowtie Pasta") -- same item, same
+    // recipe, either spelling accepted.
+    (ITEMS[k].aliases||[]).forEach(function(a){
+      var aliasNormalized=a.trim().toLowerCase().replace(/\s+/g,' ');
+      if(aliasNormalized===normalized) key=k;
+    });
   });
   return key;
 }
